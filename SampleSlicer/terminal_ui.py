@@ -129,8 +129,10 @@ class TerminalUI:
                 "Space       Play/pause",
                 "Left/Right  seek or shuttle",
                 "Up/Down     volume",
-                "S           clip start",
-                "E           clip end",
+                "A           clip start",
+                "D           clip end",
+                "W/S         voice volume",
+                "E           speak status",
                 "Enter       preview clip",
                 "Q           quit",
             )

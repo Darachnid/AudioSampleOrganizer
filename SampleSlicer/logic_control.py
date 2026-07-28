@@ -298,13 +298,13 @@ class LogicControl:
                 self.volume_control.status_message
             )
 
-        elif key in (ord("s"), ord("S")):
+        elif key in (ord("a"), ord("A")):
             self.clip_selection.select_start()
             self.status_message = (
                 self.clip_selection.status_message
             )
 
-        elif key in (ord("e"), ord("E")):
+        elif key in (ord("d"), ord("D")):
             self.clip_selection.select_end()
             self.status_message = (
                 self.clip_selection.status_message
