@@ -1,4 +1,4 @@
-# Sample Extraction Tool
+# ClipMark
 
 A terminal-based Python tool for extracting named WAV clips from long recordings.
 
@@ -36,7 +36,7 @@ Clone the repository:
 
 ```bash
 git clone <repository-url>
-cd SampleExtractionTool
+cd ClipMark
 ```
 
 Create a virtual environment:
@@ -60,8 +60,10 @@ sudo pacman -S --needed portaudio libsndfile
 
 ## Running
 
+From the project root:
+
 ```bash
-python3 sampleExtracter.py
+python3 -m ClipMark
 ```
 
 Enter the full path to a WAV file when prompted.
@@ -74,9 +76,9 @@ Paths may be entered with or without quotation marks.
 Space       Play/pause
 Left/Right  transport controls
 Up/Down     volume
-S           clip start
-E           clip end
-Enter       commit
+A           clip start
+D           clip end
+Enter       preview / continue
 Q           Quit
 ```
 

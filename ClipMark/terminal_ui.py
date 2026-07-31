@@ -1,8 +1,8 @@
-"""Draw the curses terminal interface for SampleSlicer."""
+"""Draw the curses terminal interface for ClipMark."""
 
 import curses
 
-from SampleSlicer.logic_control import (
+from ClipMark.logic_control import (
     MODE_EDIT,
     MODE_FINAL,
     MODE_NAME,
@@ -222,7 +222,7 @@ class TerminalUI:
         self.safe_addstr(
             0,
             0,
-            "SampleSlicer",
+            "ClipMark",
         )
 
         self.safe_addstr(

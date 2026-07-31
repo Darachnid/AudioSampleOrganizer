@@ -16,7 +16,9 @@ class ClipExporter:
         clip_selection,
         metadata,
         player,
+        play_success_chime=None,
     ):
+        self.play_success_chime = play_success_chime
         self.audio_path = audio_path
         self.audio_subtype = audio_subtype
         self.export_directory = export_directory
@@ -190,6 +192,8 @@ class ClipExporter:
                 f"Exported: {output_path.name}. "
                 f"Continuing from {export_end:.1f} seconds."
             )
+            if self.play_success_chime is not None:
+                self.play_success_chime()
 
             return output_path
 

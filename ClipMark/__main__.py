@@ -1,4 +1,4 @@
-"""Start and assemble the modular SampleSlicer application."""
+"""Start and assemble the modular ClipMark application."""
 
 import curses
 import time
@@ -6,14 +6,15 @@ from pathlib import Path
 
 import pyglet
 
-from SampleSlicer.audio_import import load_audio
-from SampleSlicer.clip_export import ClipExporter
-from SampleSlicer.clip_selection import ClipSelection
-from SampleSlicer.logic_control import LogicControl
-from SampleSlicer.metadata_collection import MetadataCollection
-from SampleSlicer.terminal_ui import TerminalUI
-from SampleSlicer.volume_control import VolumeControl
-import SampleSlicer.transport_control as transport
+from ClipMark.audio_cues import play_export_success_chime
+from ClipMark.audio_import import load_audio
+from ClipMark.clip_export import ClipExporter
+from ClipMark.clip_selection import ClipSelection
+from ClipMark.logic_control import LogicControl
+from ClipMark.metadata_collection import MetadataCollection
+from ClipMark.terminal_ui import TerminalUI
+from ClipMark.volume_control import VolumeControl
+import ClipMark.transport_control as transport
 
 
 def configure_transport(audio_data, initial_volume):
@@ -87,6 +88,7 @@ def run_application(screen, audio_data):
         clip_selection=clip_selection,
         metadata=metadata,
         player=player,
+        play_success_chime=play_export_success_chime,
     )
 
     logic = LogicControl(
