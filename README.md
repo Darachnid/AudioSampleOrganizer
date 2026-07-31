@@ -15,13 +15,36 @@ A terminal-based Python tool for extracting named WAV clips from long recordings
 source-name.wav
 ```
 
-## Requirements
+## Windows (plug and play)
+
+1. Install [Python 3](https://www.python.org/downloads/)
+   - On the first installer screen, check **Add python.exe to PATH**
+2. Download or clone this folder (for example `C:\Users\You\ClipMark`)
+3. Double-click **`setup.bat`** once
+4. Double-click **`run.bat`** whenever you want to use ClipMark
+
+Or from Command Prompt:
+
+```bat
+cd C:\path\to\ClipMark
+setup.bat
+run.bat
+```
+
+Use **Command Prompt** or **Windows Terminal**, not a broken IDE mini-console.
+
+When prompted, paste the full path to a WAV file, for example:
+
+```text
+C:\Users\You\Music\recording.wav
+```
+
+## Linux / macOS
+
+### Requirements
 
 - Python 3
 - A terminal
-- Linux or macOS
-
-Windows may also work after installing `windows-curses`, but has not yet been fully tested.
 
 Python packages:
 
@@ -30,7 +53,7 @@ Python packages:
 * sounddevice
 * soundfile
 
-## Installation
+### Installation
 
 Clone the repository:
 
@@ -58,7 +81,7 @@ On Arch Linux or Manjaro, install the required system libraries with:
 sudo pacman -S --needed portaudio libsndfile
 ```
 
-## Running
+### Running
 
 From the project root:
 

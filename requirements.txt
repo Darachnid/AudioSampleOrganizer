@@ -2,3 +2,4 @@ numpy
 pyglet
 sounddevice
 soundfile
+windows-curses; sys_platform == "win32"
