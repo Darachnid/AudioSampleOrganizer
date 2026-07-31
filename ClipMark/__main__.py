@@ -12,7 +12,6 @@ from ClipMark.clip_export import ClipExporter
 from ClipMark.clip_selection import ClipSelection
 from ClipMark.logic_control import LogicControl
 from ClipMark.metadata_collection import MetadataCollection
-from ClipMark.speech_output import SpeechOutput
 from ClipMark.terminal_ui import TerminalUI
 from ClipMark.volume_control import VolumeControl
 import ClipMark.transport_control as transport
@@ -92,15 +91,12 @@ def run_application(screen, audio_data):
         play_success_chime=play_export_success_chime,
     )
 
-    speech = SpeechOutput(volume_percent=80)
-
     logic = LogicControl(
         transport=transport,
         volume_control=volume_control,
         clip_selection=clip_selection,
         metadata=metadata,
         clip_exporter=clip_exporter,
-        speech=speech,
     )
 
     terminal_ui = TerminalUI(
@@ -114,11 +110,7 @@ def run_application(screen, audio_data):
         clip_exporter=clip_exporter,
     )
 
-    logic.set_status_ui(terminal_ui)
     terminal_ui.configure_screen()
-    speech.speak(
-        "ClipMark ready. Press E for status, Shift E for detailed help."
-    )
 
     try:
         while logic.running:

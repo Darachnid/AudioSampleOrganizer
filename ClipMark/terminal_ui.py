@@ -122,7 +122,7 @@ class TerminalUI:
         return "Paused"
 
     def get_mode_label(self):
-        """Return a short spoken label for the active workflow mode."""
+        """Return a short label for the active workflow mode."""
 
         labels = {
             MODE_EDIT: "Edit mode",
@@ -133,86 +133,95 @@ class TerminalUI:
         }
         return labels.get(self.logic.mode, "ClipMark")
 
-    def get_mode_help(self):
-        """Return context-dependent help for the active mode."""
+    def get_mode_help_lines(self):
+        """Return context-dependent help lines for the active mode."""
 
         if self.logic.mode == MODE_EDIT:
-            return (
-                "Mark a clip: Space play or pause. "
-                "Left and Right seek or shuttle. "
-                "Up and Down change playback volume. "
-                "A sets clip start. D sets clip end. "
-                "Enter previews the clip. "
-                "E speaks status. Shift E speaks detailed status and help. "
-                "W and S change voice volume. Q quits."
-            )
+            return [
+                "Space play or pause.",
+                "Left and Right seek or shuttle.",
+                "Up and Down change playback volume.",
+                "A sets clip start. D sets clip end.",
+                "Enter previews the clip.",
+                "E shows status. Shift E shows detailed status and help.",
+                "Q quits.",
+            ]
 
         if self.logic.mode == MODE_PREVIEW:
-            return (
-                "Previewing the selected clip. "
-                "Enter continues to naming. "
-                "Right replays. "
-                "Any other key returns to editing. "
-                "E speaks status. Shift E speaks detailed help. "
-                "W and S change voice volume. Q quits."
-            )
+            return [
+                "Previewing the selected clip.",
+                "Enter continues to naming.",
+                "Right replays.",
+                "Any other key returns to editing.",
+                "E shows status. Shift E shows detailed help.",
+                "Q quits.",
+            ]
 
         if self.logic.mode == MODE_SOURCE:
-            return (
-                "Type the sound source name. "
-                "Enter continues. Left goes back. Right replays. "
-                "Backspace deletes. "
-                "F1 speaks status. F2 speaks detailed help. Q quits."
-            )
+            return [
+                "Type the sound source name.",
+                "Enter continues. Left goes back. Right replays.",
+                "Backspace deletes.",
+                "F1 shows status. F2 shows detailed help.",
+                "Q quits.",
+            ]
 
         if self.logic.mode == MODE_NAME:
-            return (
-                "Type the sample name. "
-                "Enter continues. Left goes back. Right replays. "
-                "Backspace deletes. "
-                "F1 speaks status. F2 speaks detailed help. Q quits."
-            )
+            return [
+                "Type the sample name.",
+                "Enter continues. Left goes back. Right replays.",
+                "Backspace deletes.",
+                "F1 shows status. F2 shows detailed help.",
+                "Q quits.",
+            ]
 
-        return (
-            "Final confirmation. "
-            "Enter exports the clip. Left goes back. "
-            "Right replays. Down cancels. "
-            "E speaks status. Shift E speaks detailed help. "
-            "W and S change voice volume. Q quits."
-        )
+        return [
+            "Final confirmation.",
+            "Enter exports the clip.",
+            "Left goes back. Right replays. Down cancels.",
+            "E shows status. Shift E shows detailed help.",
+            "Q quits.",
+        ]
 
     def format_marker(self, value):
-        """Return a spoken marker time, or not selected."""
+        """Return a marker time, or not selected."""
 
         if value is None:
             return "not selected"
 
         return format_time(value)
 
-    def build_brief_status(self):
-        """Return a short status suitable for a quick spoken update."""
+    def build_brief_status_lines(self):
+        """Return brief status as one JAWS-friendly line per fact."""
 
         position = format_time(self.get_current_position())
-        transport = self.get_transport_status()
+        duration = format_time(self.audio_data["duration"])
         message = self.logic.status_message.strip()
 
-        parts = [
-            self.get_mode_label(),
-            transport,
-            f"at {position}",
-            f"Volume {self.volume_control.display_percent} percent",
+        lines = [
+            "ClipMark status",
+            f"Mode: {self.get_mode_label()}",
+            f"Transport: {self.get_transport_status()}",
+            f"Position: {position} of {duration}",
+            f"Volume: {self.volume_control.display_percent} percent",
+            f"Start: {self.format_marker(self.clip_selection.start)}",
+            f"End: {self.format_marker(self.clip_selection.end)}",
         ]
 
-        if message:
-            parts.append(message)
+        if (
+            message
+            and not message.startswith("Status open")
+            and not message.startswith("Detailed status open")
+        ):
+            lines.append(f"Message: {message}")
 
-        return ". ".join(parts) + "."
+        lines.append("Press any key to return.")
+        lines.append("Press Shift E for detailed status and help.")
+        return lines
 
-    def build_detailed_status(self):
-        """Return status plus markers and context-dependent help."""
+    def build_detailed_status_lines(self):
+        """Return detailed status and mode help as separate lines."""
 
-        start = self.format_marker(self.clip_selection.start)
-        end = self.format_marker(self.clip_selection.end)
         duration = format_time(self.audio_data["duration"])
         position = format_time(self.get_current_position())
 
@@ -227,30 +236,36 @@ class TerminalUI:
         else:
             length = "unknown"
 
-        details = [
-            self.build_brief_status().rstrip("."),
-            f"File {self.audio_data['path'].name}",
-            f"Duration {duration}",
-            f"Position {position}",
-            f"Start {start}",
-            f"End {end}",
-            f"Length {length}",
-            f"Voice volume {self.logic.speech.volume_percent} percent",
+        lines = [
+            "ClipMark detailed status",
+            f"Mode: {self.get_mode_label()}",
+            f"Transport: {self.get_transport_status()}",
+            f"File: {self.audio_data['path'].name}",
+            f"Duration: {duration}",
+            f"Position: {position}",
+            f"Volume: {self.volume_control.display_percent} percent",
+            f"Start: {self.format_marker(self.clip_selection.start)}",
+            f"End: {self.format_marker(self.clip_selection.end)}",
+            f"Length: {length}",
         ]
 
         if self.logic.mode in (MODE_SOURCE, MODE_NAME, MODE_FINAL):
             source = self.metadata.sound_source or "blank"
             name = self.metadata.sample_name or "blank"
-            details.append(f"Source {source}")
-            details.append(f"Name {name}")
+            lines.append(f"Source: {source}")
+            lines.append(f"Name: {name}")
 
             if self.logic.mode == MODE_FINAL:
-                details.append(
-                    f"Export file {self.clip_exporter.build_output_stem()}.wav"
+                lines.append(
+                    "Export file: "
+                    f"{self.clip_exporter.build_output_stem()}.wav"
                 )
 
-        details.append("Help: " + self.get_mode_help())
-        return ". ".join(details)
+        lines.append("Help for this mode:")
+        lines.extend(self.get_mode_help_lines())
+        lines.append("Press any key to return.")
+        lines.append("Press E for brief status.")
+        return lines
 
     def get_controls(self):
         """Return the controls appropriate for the current mode."""
@@ -262,9 +277,8 @@ class TerminalUI:
                 "Up/Down     playback volume",
                 "A           clip start",
                 "D           clip end",
-                "E           speak status",
-                "Shift+E     detailed status/help",
-                "W/S         voice volume",
+                "E           JAWS status",
+                "Shift+E     JAWS detail/help",
                 "Enter       preview clip",
                 "Q           quit",
             )
@@ -274,8 +288,7 @@ class TerminalUI:
                 "Enter       continue",
                 "Right       replay",
                 "Other key   adjust clip",
-                "E / Shift+E status / detail",
-                "W/S         voice volume",
+                "E / Shift+E JAWS status / detail",
                 "Q           quit",
             )
 
@@ -288,7 +301,7 @@ class TerminalUI:
                 "Left        back",
                 "Right       replay",
                 "Backspace   delete text",
-                "F1 / F2     status / detail",
+                "F1 / F2     JAWS status / detail",
                 "Q           quit",
             )
 
@@ -297,8 +310,7 @@ class TerminalUI:
             "Left        back",
             "Right       replay",
             "Down        cancel",
-            "E / Shift+E status / detail",
-            "W/S         voice volume",
+            "E / Shift+E JAWS status / detail",
             "Q           quit",
         )
 
@@ -553,15 +565,43 @@ class TerminalUI:
             f"Message: {self.logic.status_message}",
         )
 
+    def draw_status_view(self):
+        """
+        Draw a full-screen status page for JAWS.
+
+        One fact per line so JAWS can read the window or move line by line
+        without the dense main UI.
+        """
+
+        height, width = self.screen.getmaxyx()
+
+        if self.logic.status_view == "detail":
+            lines = self.build_detailed_status_lines()
+        else:
+            lines = self.build_brief_status_lines()
+
+        max_rows = max(1, height)
+        max_cols = max(1, width - 1)
+
+        for row, line in enumerate(lines[:max_rows]):
+            self.safe_addstr(
+                row,
+                0,
+                str(line)[:max_cols],
+            )
+
     def draw(self):
         """Redraw the entire terminal interface."""
 
         self.screen.erase()
 
-        self.draw_header()
-        self.draw_selection()
-        self.draw_controls()
-        self.draw_prompt()
-        self.draw_status()
+        if self.logic.status_view is not None:
+            self.draw_status_view()
+        else:
+            self.draw_header()
+            self.draw_selection()
+            self.draw_controls()
+            self.draw_prompt()
+            self.draw_status()
 
         self.screen.refresh()

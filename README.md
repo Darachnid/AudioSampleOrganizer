@@ -102,14 +102,13 @@ Up/Down     playback volume
 A           clip start
 D           clip end
 Enter       preview / continue
-E           speak brief status
-Shift+E     speak detailed status + mode help
-W/S         spoken-voice volume
+E           JAWS status screen (brief)
+Shift+E     JAWS status screen (detail + mode help)
 F1 / F2     status / detail during text entry
 Q           Quit
 ```
 
-Screen-reader note: the curses UI is one screen buffer, so JAWS whole-screen read is limited. Use **E** / **Shift+E** (or **F1** / **F2** while typing names) for spoken, mode-aware status instead of re-reading the whole screen.
+Screen-reader note: JAWS can only usefully read a whole console screen here. **E** and **Shift+E** replace the UI with a clean, one-fact-per-line status page for JAWS to read. Press any key to return. During source/name typing use **F1** / **F2** instead.
 
 After pressing Enter, the selected clip is previewed automatically.
 

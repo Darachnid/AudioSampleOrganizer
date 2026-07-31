@@ -20,81 +20,86 @@ class LogicControl:
         clip_selection,
         metadata,
         clip_exporter,
-        speech,
     ):
         self.transport = transport
         self.volume_control = volume_control
         self.clip_selection = clip_selection
         self.metadata = metadata
         self.clip_exporter = clip_exporter
-        self.speech = speech
-        self.status_ui = None
 
         self.mode = MODE_EDIT
         self.running = True
+
+        # None, "brief", or "detail": full-screen JAWS status view.
+        self.status_view = None
+
         self.status_message = (
             "Select a start and end time. "
             "Press E for status, Shift E for detail."
         )
 
-    def set_status_ui(self, status_ui):
-        """Attach the UI used to build spoken status text."""
+    def open_status_view(self, detailed=False):
+        """Show a JAWS-readable status screen for the current mode."""
 
-        self.status_ui = status_ui
+        self.status_view = "detail" if detailed else "brief"
+        self.status_message = (
+            "Detailed status open. Press any key to return."
+            if detailed
+            else "Status open. Press any key to return."
+        )
 
-    def announce_status(self, detailed=False):
-        """Speak brief status, or detailed status with mode help."""
+    def close_status_view(self):
+        """Leave the JAWS status screen and restore the main UI."""
 
-        if self.status_ui is None:
-            text = self.status_message
-        elif detailed:
-            text = self.status_ui.build_detailed_status()
-        else:
-            text = self.status_ui.build_brief_status()
+        if self.status_view is None:
+            return
 
-        self.speech.speak(text)
+        self.status_view = None
+        self.status_message = (
+            "Back to ClipMark. Press E for status, "
+            "Shift E for detail."
+        )
 
-        if detailed:
-            self.status_message = (
-                "Detailed status spoken. Press E for brief status."
-            )
-        else:
-            self.status_message = text
+    def handle_status_view_key(self, key):
+        """Handle keys while the JAWS status screen is open."""
 
-    def adjust_voice_volume(self, direction):
-        """Change spoken-voice volume and announce the new level."""
+        if key in (ord("e"), curses.KEY_F1):
+            self.open_status_view(detailed=False)
+            return True
 
-        self.speech.change_volume(direction)
-        self.status_message = self.speech.status_message
-        self.speech.speak(self.status_message)
+        if key in (ord("E"), curses.KEY_F2):
+            self.open_status_view(detailed=True)
+            return True
+
+        if key in (ord("q"), ord("Q")):
+            self.running = False
+            return True
+
+        self.close_status_view()
+        return True
 
     def handle_accessibility_key(self, key):
         """
-        Handle status/help and voice-volume keys.
+        Open JAWS status/help screens.
 
         Returns True when the key was consumed.
         """
+
+        if self.status_view is not None:
+            return self.handle_status_view_key(key)
 
         text_entry = self.mode in (MODE_SOURCE, MODE_NAME)
 
         if key == curses.KEY_F1 or (
             key == ord("e") and not text_entry
         ):
-            self.announce_status(detailed=False)
+            self.open_status_view(detailed=False)
             return True
 
         if key == curses.KEY_F2 or (
             key == ord("E") and not text_entry
         ):
-            self.announce_status(detailed=True)
-            return True
-
-        if (
-            key in (ord("w"), ord("W"), ord("s"), ord("S"))
-            and not text_entry
-        ):
-            direction = 1 if key in (ord("w"), ord("W")) else -1
-            self.adjust_voice_volume(direction)
+            self.open_status_view(detailed=True)
             return True
 
         return False
@@ -449,4 +454,4 @@ class LogicControl:
             )
 
         self.clip_selection.stop_preview()
-        self.speech.stop()
+        self.status_view = None
