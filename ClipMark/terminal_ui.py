@@ -121,6 +121,137 @@ class TerminalUI:
 
         return "Paused"
 
+    def get_mode_label(self):
+        """Return a short spoken label for the active workflow mode."""
+
+        labels = {
+            MODE_EDIT: "Edit mode",
+            MODE_PREVIEW: "Preview mode",
+            MODE_SOURCE: "Sound source entry",
+            MODE_NAME: "Sample name entry",
+            MODE_FINAL: "Final export confirmation",
+        }
+        return labels.get(self.logic.mode, "ClipMark")
+
+    def get_mode_help(self):
+        """Return context-dependent help for the active mode."""
+
+        if self.logic.mode == MODE_EDIT:
+            return (
+                "Mark a clip: Space play or pause. "
+                "Left and Right seek or shuttle. "
+                "Up and Down change playback volume. "
+                "A sets clip start. D sets clip end. "
+                "Enter previews the clip. "
+                "E speaks status. Shift E speaks detailed status and help. "
+                "W and S change voice volume. Q quits."
+            )
+
+        if self.logic.mode == MODE_PREVIEW:
+            return (
+                "Previewing the selected clip. "
+                "Enter continues to naming. "
+                "Right replays. "
+                "Any other key returns to editing. "
+                "E speaks status. Shift E speaks detailed help. "
+                "W and S change voice volume. Q quits."
+            )
+
+        if self.logic.mode == MODE_SOURCE:
+            return (
+                "Type the sound source name. "
+                "Enter continues. Left goes back. Right replays. "
+                "Backspace deletes. "
+                "F1 speaks status. F2 speaks detailed help. Q quits."
+            )
+
+        if self.logic.mode == MODE_NAME:
+            return (
+                "Type the sample name. "
+                "Enter continues. Left goes back. Right replays. "
+                "Backspace deletes. "
+                "F1 speaks status. F2 speaks detailed help. Q quits."
+            )
+
+        return (
+            "Final confirmation. "
+            "Enter exports the clip. Left goes back. "
+            "Right replays. Down cancels. "
+            "E speaks status. Shift E speaks detailed help. "
+            "W and S change voice volume. Q quits."
+        )
+
+    def format_marker(self, value):
+        """Return a spoken marker time, or not selected."""
+
+        if value is None:
+            return "not selected"
+
+        return format_time(value)
+
+    def build_brief_status(self):
+        """Return a short status suitable for a quick spoken update."""
+
+        position = format_time(self.get_current_position())
+        transport = self.get_transport_status()
+        message = self.logic.status_message.strip()
+
+        parts = [
+            self.get_mode_label(),
+            transport,
+            f"at {position}",
+            f"Volume {self.volume_control.display_percent} percent",
+        ]
+
+        if message:
+            parts.append(message)
+
+        return ". ".join(parts) + "."
+
+    def build_detailed_status(self):
+        """Return status plus markers and context-dependent help."""
+
+        start = self.format_marker(self.clip_selection.start)
+        end = self.format_marker(self.clip_selection.end)
+        duration = format_time(self.audio_data["duration"])
+        position = format_time(self.get_current_position())
+
+        if (
+            self.clip_selection.start is not None
+            and self.clip_selection.end is not None
+            and self.clip_selection.end > self.clip_selection.start
+        ):
+            length = format_time(
+                self.clip_selection.end - self.clip_selection.start
+            )
+        else:
+            length = "unknown"
+
+        details = [
+            self.build_brief_status().rstrip("."),
+            f"File {self.audio_data['path'].name}",
+            f"Duration {duration}",
+            f"Position {position}",
+            f"Start {start}",
+            f"End {end}",
+            f"Length {length}",
+            f"Voice volume {self.logic.speech.volume_percent} percent",
+        ]
+
+        if self.logic.mode in (MODE_SOURCE, MODE_NAME, MODE_FINAL):
+            source = self.metadata.sound_source or "blank"
+            name = self.metadata.sample_name or "blank"
+            details.append(f"Source {source}")
+            details.append(f"Name {name}")
+
+            if self.logic.mode == MODE_FINAL:
+                details.append(
+                    f"Export file {self.clip_exporter.build_output_stem()}.wav"
+                )
+
+        details.append("Help: " + self.get_mode_help())
+        return ". ".join(details)
+
     def get_controls(self):
         """Return the controls appropriate for the current mode."""
 
@@ -128,11 +259,12 @@ class TerminalUI:
             return (
                 "Space       Play/pause",
                 "Left/Right  seek or shuttle",
-                "Up/Down     volume",
+                "Up/Down     playback volume",
                 "A           clip start",
                 "D           clip end",
-                "W/S         voice volume",
                 "E           speak status",
+                "Shift+E     detailed status/help",
+                "W/S         voice volume",
                 "Enter       preview clip",
                 "Q           quit",
             )
@@ -142,6 +274,8 @@ class TerminalUI:
                 "Enter       continue",
                 "Right       replay",
                 "Other key   adjust clip",
+                "E / Shift+E status / detail",
+                "W/S         voice volume",
                 "Q           quit",
             )
 
@@ -154,6 +288,7 @@ class TerminalUI:
                 "Left        back",
                 "Right       replay",
                 "Backspace   delete text",
+                "F1 / F2     status / detail",
                 "Q           quit",
             )
 
@@ -162,6 +297,8 @@ class TerminalUI:
             "Left        back",
             "Right       replay",
             "Down        cancel",
+            "E / Shift+E status / detail",
+            "W/S         voice volume",
             "Q           quit",
         )
 

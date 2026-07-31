@@ -20,18 +20,84 @@ class LogicControl:
         clip_selection,
         metadata,
         clip_exporter,
+        speech,
     ):
         self.transport = transport
         self.volume_control = volume_control
         self.clip_selection = clip_selection
         self.metadata = metadata
         self.clip_exporter = clip_exporter
+        self.speech = speech
+        self.status_ui = None
 
         self.mode = MODE_EDIT
         self.running = True
         self.status_message = (
-            "Select a start and end time."
+            "Select a start and end time. "
+            "Press E for status, Shift E for detail."
         )
+
+    def set_status_ui(self, status_ui):
+        """Attach the UI used to build spoken status text."""
+
+        self.status_ui = status_ui
+
+    def announce_status(self, detailed=False):
+        """Speak brief status, or detailed status with mode help."""
+
+        if self.status_ui is None:
+            text = self.status_message
+        elif detailed:
+            text = self.status_ui.build_detailed_status()
+        else:
+            text = self.status_ui.build_brief_status()
+
+        self.speech.speak(text)
+
+        if detailed:
+            self.status_message = (
+                "Detailed status spoken. Press E for brief status."
+            )
+        else:
+            self.status_message = text
+
+    def adjust_voice_volume(self, direction):
+        """Change spoken-voice volume and announce the new level."""
+
+        self.speech.change_volume(direction)
+        self.status_message = self.speech.status_message
+        self.speech.speak(self.status_message)
+
+    def handle_accessibility_key(self, key):
+        """
+        Handle status/help and voice-volume keys.
+
+        Returns True when the key was consumed.
+        """
+
+        text_entry = self.mode in (MODE_SOURCE, MODE_NAME)
+
+        if key == curses.KEY_F1 or (
+            key == ord("e") and not text_entry
+        ):
+            self.announce_status(detailed=False)
+            return True
+
+        if key == curses.KEY_F2 or (
+            key == ord("E") and not text_entry
+        ):
+            self.announce_status(detailed=True)
+            return True
+
+        if (
+            key in (ord("w"), ord("W"), ord("s"), ord("S"))
+            and not text_entry
+        ):
+            direction = 1 if key in (ord("w"), ord("W")) else -1
+            self.adjust_voice_volume(direction)
+            return True
+
+        return False
 
     def set_status(self, message):
         """Set the message displayed by the terminal UI."""
@@ -324,6 +390,9 @@ class LogicControl:
     def handle_key(self, key):
         """Route one curses key based on the current workflow mode."""
 
+        if self.handle_accessibility_key(key):
+            return self.running
+
         if self.mode == MODE_PREVIEW:
             self.handle_preview_key(key)
 
@@ -380,3 +449,4 @@ class LogicControl:
             )
 
         self.clip_selection.stop_preview()
+        self.speech.stop()

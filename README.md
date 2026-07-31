@@ -98,12 +98,18 @@ Paths may be entered with or without quotation marks.
 ```text
 Space       Play/pause
 Left/Right  transport controls
-Up/Down     volume
+Up/Down     playback volume
 A           clip start
 D           clip end
 Enter       preview / continue
+E           speak brief status
+Shift+E     speak detailed status + mode help
+W/S         spoken-voice volume
+F1 / F2     status / detail during text entry
 Q           Quit
 ```
+
+Screen-reader note: the curses UI is one screen buffer, so JAWS whole-screen read is limited. Use **E** / **Shift+E** (or **F1** / **F2** while typing names) for spoken, mode-aware status instead of re-reading the whole screen.
 
 After pressing Enter, the selected clip is previewed automatically.
 
