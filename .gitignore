@@ -4,4 +4,11 @@ __pycache__/
 .venv/
 ExportedSamples/
 sample_metadata.json
+build/
+cmake-build-*/
+*.user
+*.autosave
+CMakeLists.txt.user
+clipmark-rs/target/
+
 

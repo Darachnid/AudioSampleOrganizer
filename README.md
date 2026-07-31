@@ -1,121 +1,66 @@
 # ClipMark
 
-A terminal-based Python tool for extracting named WAV clips from long recordings.
+Accessible WAV clip marker. Current preferred implementation: **Rust + egui / AccessKit**.
 
-## Features
-
-* Play and pause audio
-* Scrub forward and backward
-* Adjust preview volume
-* Mark clip start and end points
-* Preview clips before exporting
-* Export clips as:
+Mark start/end points in a long recording, preview the selection, name it, and export:
 
 ```text
 source-name.wav
 ```
 
-## Windows (plug and play)
+## Why Rust + egui
 
-1. Install [Python 3](https://www.python.org/downloads/)
-   - On the first installer screen, check **Add python.exe to PATH**
-2. Download or clone this folder (for example `C:\Users\You\ClipMark`)
-3. Double-click **`setup.bat`** once
-4. Double-click **`run.bat`** whenever you want to use ClipMark
+JAWS and other screen readers need structured UI, not a curses screen dump. egui ships with **AccessKit**, which maps widgets to platform accessibility (UI Automation on Windows, AT-SPI on Linux).
 
-Or from Command Prompt:
-
-```bat
-cd C:\path\to\ClipMark
-setup.bat
-run.bat
-```
-
-Use **Command Prompt** or **Windows Terminal**, not a broken IDE mini-console.
-
-When prompted, paste the full path to a WAV file, for example:
-
-```text
-C:\Users\You\Music\recording.wav
-```
-
-## Linux / macOS
+## Rust (recommended)
 
 ### Requirements
 
-- Python 3
-- A terminal
+- Rust stable (`rustup`)
+- A C linker / system libs for audio and windowing
+  - Linux: `alsa-lib` (and usual X11/Wayland deps)
+  - Windows: MSVC Build Tools
 
-Python packages:
-
-* numpy
-* pyglet
-* sounddevice
-* soundfile
-
-### Installation
-
-Clone the repository:
+### Build & run
 
 ```bash
-git clone <repository-url>
-cd ClipMark
+cd clipmark-rs
+cargo run --release
 ```
 
-Create a virtual environment:
+Binary: `clipmark-rs/target/release/clipmark`
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Install the dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-On Arch Linux or Manjaro, install the required system libraries with:
-
-```bash
-sudo pacman -S --needed portaudio libsndfile
-```
-
-### Running
-
-From the project root:
-
-```bash
-python3 -m ClipMark
-```
-
-Enter the full path to a WAV file when prompted.
-
-Paths may be entered with or without quotation marks.
-
-## Controls
+### Controls
 
 ```text
 Space       Play/pause
-Left/Right  transport controls
+Left/Right  tap = ±5s, hold = shuttle seek
 Up/Down     playback volume
 A           clip start
 D           clip end
-Enter       preview / continue
-E           JAWS status screen (brief)
-Shift+E     JAWS status screen (detail + mode help)
+Enter       preview / continue / export
+E           status dialog (brief)
+Shift+E     status dialog (detail + mode help)
 F1 / F2     status / detail during text entry
 Q           Quit
 ```
 
-Screen-reader note: JAWS can only usefully read a whole console screen here. **E** and **Shift+E** replace the UI with a clean, one-fact-per-line status page for JAWS to read. Press any key to return. During source/name typing use **F1** / **F2** instead.
+Workflow: **Edit → Preview → Source → Name → Final → Export**.
 
-After pressing Enter, the selected clip is previewed automatically.
+## Other implementations in this repo
 
-Enter the source and clip name when prompted. The exported filename will use this format:
+| Path | Stack | Notes |
+|------|--------|------|
+| `clipmark-rs/` | Rust + egui + AccessKit | Preferred for accessibility |
+| `src/` | Qt 6 + C++ | Also accessible widgets |
+| `ClipMark/` | Python + curses | Legacy prototype |
 
-```text
-source-name.wav
+### Qt / C++ (optional)
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+./build/ClipMark
 ```
 
 ## License
